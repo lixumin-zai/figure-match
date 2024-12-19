@@ -1,0 +1,7 @@
+*__pycache__
+*.log
+*.pkl
+*.ckpt
+*.jpg
+*.png
+database

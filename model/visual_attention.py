@@ -33,6 +33,7 @@ from PIL import Image
 
 import utils
 import vision_transformer as vits
+from lightning_module import DINOLightningModule, TrainConfig
 
 
 def apply_mask(image, mask, color, alpha=0.5):
@@ -99,12 +100,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('Visualize Self-Attention maps')
     parser.add_argument('--arch', default='vit_small', type=str,
         choices=['vit_tiny', 'vit_small', 'vit_base'], help='Architecture (support only ViT atm).')
-    parser.add_argument('--patch_size', default=8, type=int, help='Patch resolution of the model.')
-    parser.add_argument('--pretrained_weights', default='', type=str,
+    parser.add_argument('--patch_size', default=16, type=int, help='Patch resolution of the model.')
+    parser.add_argument('--pretrained_weights', default='/home/lixumin/project/figure-match/model/checkpoints/epoch=33-train_acc=0.00.ckpt', type=str,
         help="Path to pretrained weights to load.")
     parser.add_argument("--checkpoint_key", default="teacher", type=str,
         help='Key to use in the checkpoint (example: "teacher")')
-    parser.add_argument("--image_path", default=None, type=str, help="Path of the image to load.")
+    parser.add_argument("--image_path", default="/home/lixumin/project/local_dinov2/local_match/1.jpg", type=str, help="Path of the image to load.")
     parser.add_argument("--image_size", default=(480, 480), type=int, nargs="+", help="Resize image.")
     parser.add_argument('--output_dir', default='.', help='Path where to save visualizations.')
     parser.add_argument("--threshold", type=float, default=None, help="""We visualize masks
@@ -113,39 +114,43 @@ if __name__ == '__main__':
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     # build model
-    model = vits.__dict__[args.arch](patch_size=args.patch_size, num_classes=0)
+    # model = vits.__dict__[args.arch](patch_size=args.patch_size, num_classes=0)
+
+    model = DINOLightningModule.load_from_checkpoint(args.pretrained_weights, config=TrainConfig())
+
+    model = model.teacher.backbone
     for p in model.parameters():
         p.requires_grad = False
     model.eval()
     model.to(device)
-    if os.path.isfile(args.pretrained_weights):
-        state_dict = torch.load(args.pretrained_weights, map_location="cpu")
-        if args.checkpoint_key is not None and args.checkpoint_key in state_dict:
-            print(f"Take key {args.checkpoint_key} in provided checkpoint dict")
-            state_dict = state_dict[args.checkpoint_key]
-        # remove `module.` prefix
-        state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
-        # remove `backbone.` prefix induced by multicrop wrapper
-        state_dict = {k.replace("backbone.", ""): v for k, v in state_dict.items()}
-        msg = model.load_state_dict(state_dict, strict=False)
-        print('Pretrained weights found at {} and loaded with msg: {}'.format(args.pretrained_weights, msg))
-    else:
-        print("Please use the `--pretrained_weights` argument to indicate the path of the checkpoint to evaluate.")
-        url = None
-        if args.arch == "vit_small" and args.patch_size == 16:
-            url = "dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth"
-        elif args.arch == "vit_small" and args.patch_size == 8:
-            url = "dino_deitsmall8_300ep_pretrain/dino_deitsmall8_300ep_pretrain.pth"  # model used for visualizations in our paper
-        elif args.arch == "vit_base" and args.patch_size == 16:
-            url = "dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth"
-        elif args.arch == "vit_base" and args.patch_size == 8:
-            url = "dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth"
-        if url is not None:
-            print("Since no pretrained weights have been provided, we load the reference pretrained DINO weights.")
-            state_dict = torch.hub.load_state_dict_from_url(url="https://dl.fbaipublicfiles.com/dino/" + url)
-            model.load_state_dict(state_dict, strict=True)
-        else:
-            print("There is no reference weights available for this model => We use random weights.")
+    # if os.path.isfile(args.pretrained_weights):
+    #     state_dict = torch.load(args.pretrained_weights, map_location="cpu")
+    #     if args.checkpoint_key is not None and args.checkpoint_key in state_dict:
+    #         print(f"Take key {args.checkpoint_key} in provided checkpoint dict")
+    #         state_dict = state_dict[args.checkpoint_key]
+    #     # remove `module.` prefix
+    #     state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+    #     # remove `backbone.` prefix induced by multicrop wrapper
+    #     state_dict = {k.replace("backbone.", ""): v for k, v in state_dict.items()}
+    #     msg = model.load_state_dict(state_dict, strict=False)
+    #     print('Pretrained weights found at {} and loaded with msg: {}'.format(args.pretrained_weights, msg))
+    # else:
+    #     print("Please use the `--pretrained_weights` argument to indicate the path of the checkpoint to evaluate.")
+    #     url = None
+    #     if args.arch == "vit_small" and args.patch_size == 16:
+    #         url = "dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth"
+    #     elif args.arch == "vit_small" and args.patch_size == 8:
+    #         url = "dino_deitsmall8_300ep_pretrain/dino_deitsmall8_300ep_pretrain.pth"  # model used for visualizations in our paper
+    #     elif args.arch == "vit_base" and args.patch_size == 16:
+    #         url = "dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth"
+    #     elif args.arch == "vit_base" and args.patch_size == 8:
+    #         url = "dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth"
+    #     if url is not None:
+    #         print("Since no pretrained weights have been provided, we load the reference pretrained DINO weights.")
+    #         state_dict = torch.hub.load_state_dict_from_url(url="https://dl.fbaipublicfiles.com/dino/" + url)
+    #         model.load_state_dict(state_dict, strict=True)
+    #     else:
+    #         print("There is no reference weights available for this model => We use random weights.")
 
     # open image
     if args.image_path is None:
@@ -211,3 +216,12 @@ if __name__ == '__main__':
         image = skimage.io.imread(os.path.join(args.output_dir, "img.png"))
         for j in range(nh):
             display_instances(image, th_attn[j], fname=os.path.join(args.output_dir, "mask_th" + str(args.threshold) + "_head" + str(j) +".png"), blur=False)
+
+
+            # /home/lixumin/project/figure-match/model/attn-head0.png
+            # /home/lixumin/project/figure-match/model/attn-head1.png
+            # /home/lixumin/project/figure-match/model/attn-head2.png
+            # /home/lixumin/project/figure-match/model/attn-head3.png
+            # /home/lixumin/project/figure-match/model/attn-head4.png
+            # /home/lixumin/project/figure-match/model/attn-head5.png
+            # /home/lixumin/project/figure-match/model/img.png,

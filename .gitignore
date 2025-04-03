@@ -2,3 +2,5 @@
 *lightning_logs
 data/ckpt
 data/train_data
+*.log
+*checkpoints

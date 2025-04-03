@@ -15,7 +15,6 @@ from torchmetrics import Accuracy
 from torchvision import datasets, transforms
 from PIL import ImageFilter
 from PIL import Image
-import timm
 from vision_transformer import vit_small, DINOHead
 
 from utils import *
@@ -164,7 +163,6 @@ class DINOLightningModule(pl.LightningModule):
         pass
 
 
-
 class DataPLModule(pl.LightningDataModule):
     def __init__(self, dataset_name_or_path, train_batch_size, num_workers, seed, global_crops_scale, local_crops_scale, local_crops_number):
         super().__init__()
@@ -258,8 +256,7 @@ if __name__ == '__main__':
     trainer = pl.Trainer(
         max_epochs=train_config.max_epochs,
         devices=[1],
-        callbacks=[checkpoint_callback],  # 添加 checkpoint 回调
-        
+        callbacks=[checkpoint_callback],  # 添加 checkpoint 回调   
     )
     
     model = DINOLightningModule(config=train_config)

@@ -1,0 +1,4 @@
+*_pycache__
+*lightning_logs
+data/ckpt
+data/train_data

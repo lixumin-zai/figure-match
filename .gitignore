@@ -2,5 +2,8 @@
 *lightning_logs
 data/ckpt
 data/train_data
+data/images.zip
 *.log
 *checkpoints
+model/*.png
+*.ckpt

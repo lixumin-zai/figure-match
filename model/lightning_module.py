@@ -64,19 +64,21 @@ class TrainConfig:
     def __init__(self):
         self.output_dim = 768
         self.learning_rate = 1e-4
-        self.batch_size = 32
+        self.batch_size = 64
         self.max_epochs = 100
         self.teacher_temp = 0.04 # softmax 温度系数更小，使得更突出
         self.student_temp = 0.1  
         self.center_momentum = 0.9
         self.ema_decay = 0.9995
-        self.dataset_path = "/home/lixumin/project/local_dinov2/local_match/data/"  # 替换为你自己的数据集路径
+        self.dataset_path = "/home/lixumin/project/figure-match/data/train_data"  # 替换为你自己的数据集路径
         self.num_workers = self.batch_size+1
         self.seed = 42
 
         self.global_crops_scale = (0.4, 1)
         self.local_crops_scale = (0.2, 0.4)
         self.local_crops_number = 8
+
+        self.save_path = "/home/lixumin/project/figure-match/data/ckpt"
 
 
 class DINOLightningModule(pl.LightningModule):
@@ -162,6 +164,11 @@ class DINOLightningModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         pass
 
+    # @rank_zero_only
+    # def on_save_checkpoint(self, checkpoint):
+    #     save_path = Path(self.config.save_path)
+    #     self.model.save_pretrained(save_path)
+    #     self.processor.save_pretrained(save_path)
 
 class DataPLModule(pl.LightningDataModule):
     def __init__(self, dataset_name_or_path, train_batch_size, num_workers, seed, global_crops_scale, local_crops_scale, local_crops_number):

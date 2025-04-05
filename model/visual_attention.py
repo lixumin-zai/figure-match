@@ -97,16 +97,24 @@ def display_instances(image, mask, fname="test", figsize=(5, 5), blur=False, con
 
 
 if __name__ == '__main__':
+    # ./attn-head0.png
+    # ./attn-head1.png
+    # ./attn-head2.png
+    # ./attn-head3.png
+    # ./attn-head4.png
+    # ./attn-head5.png
+    # ./img.png
+
     parser = argparse.ArgumentParser('Visualize Self-Attention maps')
     parser.add_argument('--arch', default='vit_small', type=str,
         choices=['vit_tiny', 'vit_small', 'vit_base'], help='Architecture (support only ViT atm).')
     parser.add_argument('--patch_size', default=16, type=int, help='Patch resolution of the model.')
-    parser.add_argument('--pretrained_weights', default='/home/lixumin/project/figure-match/model/checkpoints/epoch=33-train_acc=0.00.ckpt', type=str,
+    parser.add_argument('--pretrained_weights', default='/home/lixumin/project/figure-match/model/checkpoints/epoch=99-train_acc=0.00.ckpt', type=str,
         help="Path to pretrained weights to load.")
     parser.add_argument("--checkpoint_key", default="teacher", type=str,
         help='Key to use in the checkpoint (example: "teacher")')
-    parser.add_argument("--image_path", default="/home/lixumin/project/local_dinov2/local_match/1.jpg", type=str, help="Path of the image to load.")
-    parser.add_argument("--image_size", default=(480, 480), type=int, nargs="+", help="Resize image.")
+    parser.add_argument("--image_path", default="/home/lixumin/project/figure-match/data/train_data/upload/|20241206_101335.jpg", type=str, help="Path of the image to load.")
+    parser.add_argument("--image_size", default=(1024, 1024), type=int, nargs="+", help="Resize image.")
     parser.add_argument('--output_dir', default='.', help='Path where to save visualizations.')
     parser.add_argument("--threshold", type=float, default=None, help="""We visualize masks
         obtained by thresholding the self-attention maps to keep xx% of the mass.""")
@@ -216,12 +224,3 @@ if __name__ == '__main__':
         image = skimage.io.imread(os.path.join(args.output_dir, "img.png"))
         for j in range(nh):
             display_instances(image, th_attn[j], fname=os.path.join(args.output_dir, "mask_th" + str(args.threshold) + "_head" + str(j) +".png"), blur=False)
-
-
-            # /home/lixumin/project/figure-match/model/attn-head0.png
-            # /home/lixumin/project/figure-match/model/attn-head1.png
-            # /home/lixumin/project/figure-match/model/attn-head2.png
-            # /home/lixumin/project/figure-match/model/attn-head3.png
-            # /home/lixumin/project/figure-match/model/attn-head4.png
-            # /home/lixumin/project/figure-match/model/attn-head5.png
-            # /home/lixumin/project/figure-match/model/img.png,

@@ -6,4 +6,6 @@ data/images.zip
 *.log
 *checkpoints
 model/*.png
+model/*.jpg
+*wandb
 *.ckpt

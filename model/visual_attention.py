@@ -109,7 +109,7 @@ if __name__ == '__main__':
     parser.add_argument('--arch', default='vit_small', type=str,
         choices=['vit_tiny', 'vit_small', 'vit_base'], help='Architecture (support only ViT atm).')
     parser.add_argument('--patch_size', default=16, type=int, help='Patch resolution of the model.')
-    parser.add_argument('--pretrained_weights', default='/home/lixumin/project/figure-match/model/checkpoints/epoch=99-train_acc=0.00.ckpt', type=str,
+    parser.add_argument('--pretrained_weights', default='/home/lixumin/project/figure-match/model/checkpoints/epoch=09-train_acc=0.00.ckpt', type=str,
         help="Path to pretrained weights to load.")
     parser.add_argument("--checkpoint_key", default="teacher", type=str,
         help='Key to use in the checkpoint (example: "teacher")')
@@ -120,17 +120,17 @@ if __name__ == '__main__':
         obtained by thresholding the self-attention maps to keep xx% of the mass.""")
     args = parser.parse_args()
 
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     # build model
     # model = vits.__dict__[args.arch](patch_size=args.patch_size, num_classes=0)
 
-    model = DINOLightningModule.load_from_checkpoint(args.pretrained_weights, config=TrainConfig())
-
+    model = DINOLightningModule.load_from_checkpoint(args.pretrained_weights, config=TrainConfig(), map_location=device)
+    model.to(device)
     model = model.teacher.backbone
     for p in model.parameters():
         p.requires_grad = False
     model.eval()
-    model.to(device)
+    
     # if os.path.isfile(args.pretrained_weights):
     #     state_dict = torch.load(args.pretrained_weights, map_location="cpu")
     #     if args.checkpoint_key is not None and args.checkpoint_key in state_dict:
